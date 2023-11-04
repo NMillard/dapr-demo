@@ -6,12 +6,4 @@
         <accepts>page.html</accepts>
     </rule>
     -->
-    <rule id="7a5c8084">
-        <description>Created after removal of "This is the first topic" from Help Instance</description>
-        <accepts>Default-topic.html</accepts>
-    </rule>
-    <rule id="6a4bc664">
-        <description>Created after removal of "Tutorial" from Help Instance</description>
-        <accepts>Tutorial.html</accepts>
-    </rule>
 </rules>
