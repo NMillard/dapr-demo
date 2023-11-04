@@ -9,10 +9,10 @@ permissions:
   pages: write
 
 env:
-  INSTANCE: Writerside/daprdemo
-  ARTIFACT: webHelpDAPRDEMO-all.zip
+  INSTANCE: Writerside/dd
+  ARTIFACT: webHelpDD-all.zip
   DOCKER_VERSION: 232.10165.1
-  ALGOLIA_ARTIFACT: algolia-indexes-DAPRDEMO.zip
+  ALGOLIA_ARTIFACT: algolia-indexes-DD.zip
 
 jobs:
   build:
