@@ -1,78 +1,95 @@
-# Getting started
+# Getting started with dapr
 
-<!--Writerside adds this topic when you create a new documentation project.
-You can use it as a sandbox to play with Writerside features, and remove it from the TOC when you don't need it anymore.-->
+This "getting started" section assumes you've already installed dapr locally. If you haven't, then head over
+to [dapr's website and follow the installation instructions](https://docs.dapr.io/getting-started/).
 
-## Add new topics
-You can create empty topics, or choose a template for different types of content that contains some boilerplate structure to help you get started:
+Note that you both need to install the dapr cli and run the "init" process.
 
-![Create new topic options](new_topic_options.png){ width=290 }{border-effect=line}
+## Local development
 
-## Write content
-%product% supports two types of markup: Markdown and XML.
-When you create a new help article, you can choose between two topic types, but this doesn't mean you have to stick to a single format.
-You can author content in Markdown and extend it with semantic attributes or inject entire XML elements.
+I assume you'll spend a lot of time developing and running applications locally, so, let's dive into what the development process looks 
+like with dapr.
 
-## Inject XML
-For example, this is how you inject a procedure:
+## Starting a dapr sidecar
 
-<procedure title="Inject a procedure" id="inject-a-procedure">
-    <step>
-        <p>Start typing and select a procedure type from the completion suggestions:</p>
-        <img src="completion_procedure.png" alt="completion suggestions for procedure" border-effect="line"/>
-    </step>
-    <step>
-        <p>Press <shortcut>Tab</shortcut> or <shortcut>Enter</shortcut> to insert the markup.</p>
-    </step>
-</procedure>
+Before anything else, let's just try to start a dapr sidecar and see what happens.
 
-## Add interactive elements
+The dapr sidecar, despite its name, may run independently. This is practical during local development.
 
-### Tabs
-To add switchable content, you can make use of tabs (inject them by starting to type `tab` on a new line):
+Running the sidecar without its
+"parent" application does not make sense at first, but is actually a valuable technique for testing component integrations.
 
-<tabs>
-    <tab title="Markdown">
-        <code-block lang="plain text">![Alt Text](new_topic_options.png){ width=450 }</code-block>
-    </tab>
-    <tab title="Semantic markup">
-        <code-block lang="xml">
-            <![CDATA[<img src="new_topic_options.png" alt="Alt text" width="450px"/>]]></code-block>
-    </tab>
-</tabs>
+You can start the dapr sidecar by running:
+<code-block>
+dapr run \
+--app-id users \
+--app-port 8080 \
+--dapr-http-port 3500 \
+--dapr-grpc-port 60001 \
+--app-protocol http \
+--resources-path ./.dapr/components
+</code-block>
 
-### Collapsible blocks
-Apart from injecting entire XML elements, you can use attributes to configure the behavior of certain elements.
-For example, you can collapse a chapter that contains non-essential information:
+Let's review the command line arguments we provided to `dapr run`.
 
-#### Supplementary info {collapsible="true"}
-Content under such header will be collapsed by default, but you can modify the behavior by adding the following attribute:
-`default-state="expanded"`
+| Argument           | Description                                                                                         |
+|--------------------|-----------------------------------------------------------------------------------------------------|
+| `--app-id`         | The name of the application that'll be announced for service discovery.                             |
+| `--app-port`       | The port that _your_ application will listen to.                                                    |
+| `--dapr-http-port` | HTTP port the dapr sidecar listens to.                                                              |
+| `--dapr-grpc-port` | gRPC port the dapr sidecar listens to.                                                              |
+| `--app-protocol`   | Your applications' communication protocol                                                           |
+| `--resources-path` | Path to your component configuration files. This is relative to where the command is executed from. |
 
-### Convert selection to XML
-If you need to extend an element with more functions, you can convert selected content from Markdown to semantic markup.
-For example, if you want to merge cells in a table, it's much easier to convert it to XML than do this in Markdown.
-Position the caret anywhere in the table and press <shortcut>Alt+Enter</shortcut>:
+Now, a dapr sidecar is started and waiting for your application to start on port 8080. You should see a log like this below.
 
-<img src="convert_table_to_xml.png" alt="Convert table to XML" width="706" border-effect="line"/>
+```text
+INFO[0000] application protocol: http. waiting on port 8080.  This will block until the app is listening on that port. 
+```
 
-## Feedback and support
-Please report any issues, usability improvements, or feature requests to our
-<a href="https://youtrack.jetbrains.com/newIssue?project=WRS">YouTrack project</a>
-(you will need to register).
+At this point, you can start your application locally as you're used to with your normal development flow.
 
-You are welcome to join our
-<a href="https://join.slack.com/t/writerside/shared_invite/zt-1hnvxnl0z-Nc6RWXTppRI2Oc566vumYw">public Slack workspace</a>.
-Before you do, please read our [Code of conduct](https://plugins.jetbrains.com/plugin/20158-writerside/docs/writerside-code-of-conduct.html).
-We assume that you’ve read and acknowledged it before joining.
+## Use a convenience file
 
-You can also always send an email to [writerside@jetbrains.com](mailto:writerside@jetbrains.com).
+As part of the local development experience, you may want to keep the "run configurations" in a file to avoid typing the CLI command 
+every time. This also allows you to run multiple applications with a single dapr CLI command.
 
-<seealso>
-    <category ref="wrs">
-        <a href="https://plugins.jetbrains.com/plugin/20158-writerside/docs/markup-reference.html">Markup reference</a>
-        <a href="https://plugins.jetbrains.com/plugin/20158-writerside/docs/manage-table-of-contents.html">Reorder topics in the TOC</a>
-        <a href="https://plugins.jetbrains.com/plugin/20158-writerside/docs/local-build.html">Build and publish</a>
-        <a href="https://plugins.jetbrains.com/plugin/20158-writerside/docs/configure-search.html">Configure Search</a>
-    </category>
-</seealso>
+Create a yaml file called `dapr.yml` and place it in your solution at `solution-root/.dapr/dapr.yml`.
+
+```yaml
+# dapr.yml in root/.dapr
+version: 1
+common:
+  resourcesPath: ./components # Shared resources
+
+apps:
+- appID: your-app-id
+  appDirPath: ../src/
+  appPort: 8080
+  daprHTTPPort: 3500
+  daprGRPCPort: 60000
+  appProtocol: http
+  enableApiLogging: true
+  daprdLogDestination: console
+  appLogDestination: console
+  logLevel: debug
+# command: ["dotnet", "watch", "--non-interactive"]
+```
+
+```text
+root
+├── MySolution.sln
+├── src
+│   └── MyWebApi.csproj
+└──.dapr
+    ├ dapr.yml <– create this file
+    └── components
+```
+
+This is largely the same configurations as before, but I've added a few additional ones for logging. You may also notice the last 
+commented line. Dapr executes whatever commands you've placed in the `command` argument. In this example, dapr would try to start a 
+dotnet app.
+
+Don't mind the `components` folder yet. We'll dive in to that in the next chapter.
+
+You can then run dapr with this "Multi app run file": `dapr run --run-file ./.dapr`

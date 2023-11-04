@@ -4,9 +4,19 @@
 
 <instance-profile id="dd"
                  name="Dapr demo"
-                 start-page="Getting-started.md">
+                 start-page="Introduction.md">
 
-    <toc-element topic="Getting-started.md">
+    <toc-element topic="Introduction.md">
+        <toc-element topic="Why-dapr.md"/>
+        <toc-element topic="Dapr-sidecar.md">
+        </toc-element>
+        <toc-element topic="Building-blocks.md"/>
+        <toc-element topic="Components.md"/>
     </toc-element>
+    <toc-element topic="Developer-experience.md">
+        <toc-element topic="Getting-started.md"/>
+        <toc-element topic="Defining-components.md"/>
+    </toc-element>
+    <toc-element topic="Application-deployment.md"/>
     <toc-element topic="Reminders.md"/>
 </instance-profile>

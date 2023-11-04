@@ -7,6 +7,11 @@
         <variables>
             <noindex-content>true</noindex-content>
         </variables>
+
+        <footer>
+            <copyright>Nicklas Millard @ 2023</copyright>
+            <social type="blog" href="nmillard.medium.com"/>
+        </footer>
     </build-profile>
 
 </buildprofiles>
