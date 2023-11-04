@@ -93,3 +93,5 @@ dotnet app.
 Don't mind the `components` folder yet. We'll dive in to that in the next chapter.
 
 You can then run dapr with this "Multi app run file": `dapr run --run-file ./.dapr`
+
+## Using docker-compose

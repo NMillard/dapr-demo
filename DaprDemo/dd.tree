@@ -15,8 +15,14 @@
     </toc-element>
     <toc-element topic="Developer-experience.md">
         <toc-element topic="Getting-started.md"/>
+        <toc-element topic="Building-applications.md"/>
         <toc-element topic="Defining-components.md"/>
     </toc-element>
-    <toc-element topic="Application-deployment.md"/>
-    <toc-element topic="Reminders.md"/>
+    <toc-element topic="Application-deployment.md">
+        <toc-element topic="Azure-containerapp.md"/>
+        <toc-element topic="Configuring-components-for-production.md">
+            <toc-element topic="Secrets-management.md"/>
+        </toc-element>
+        <toc-element topic="Deploying-containers.md"/>
+    </toc-element>
 </instance-profile>

@@ -16,3 +16,7 @@ Or, you may want to go all-in, and "daprize" every aspect of your application fo
 
 Since dapr runs as a sidecar next to your application, you can also pick a hybrid approach, where, instead of using the dapr SDK, you 
 call the dapr building blocks yourself using HTTP or gRPC.
+
+## The experience
+This chapter is all about what the actual developer experience is like. We'll dive deeper into what dapr is, how its used, and what it 
+means to run daprized applications, and configuring components.
