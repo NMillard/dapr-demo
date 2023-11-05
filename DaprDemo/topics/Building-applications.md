@@ -590,52 +590,197 @@ Storing secrets in files locally is generally fine for development purposes, but
 
 > Don't use the `secretstores.local.file` component in production.  
 > See [secrets management instead](Secrets-management.md).
-{style=warning}
+> {style=warning}
 
 
 #### Preparing the component
-Create a project secrets component configuration in the `users` `.dapr/components` folder.
+1. Create a project secrets component configuration in the `users` `.dapr/components` folder.
+   ```yaml
+   apiVersion: dapr.io/v1alpha1
+   kind: Component
+   metadata:
+     name: secretstore
+     namespace: default
+   spec:
+     type: secretstores.local.file
+     version: v1
+     metadata:
+       - name: secretsFile
+         # Relative to the project, and not solution root
+         value: .dapr/secrets/appsettings.Secrets.json
+         # Allows nested json
+       - name: nestedSeparator 
+         value: ":"
+         # 'multiValued=false' allows us to access json
+         # values like ConnectionStrings:Postgresql
+         # which would otherwise just become "Postgresql"
+       - name: multiValued
+         value: "false"
+   ```
+   Since secrets are typically application-specific, you'd want to place this file within the project that needs the secrets, as opposed to
+   having this component as a shared resource between all daprized applications.
+   > The **'secretsFile'** value is relative to the project itself and not the solution or dapr multi app run file.
+   {style=note}
+2. In the project itself, create a file that holds secret values here `.dapr/secrets/appsettings.Secrets.json`, containing whatever values
+   your application might need, such as a connection string or private key.
+   ```json
+   // appsettings.Secrets.json 
+   // placed in the project .dapr/secrets folder
+   {
+     "ConnectionStrings": {
+       "Postgresql": "My secret connectionstring to postgresql"
+     }
+   }
+   ```
+3. git-ignore the `appsettings.Secrets.json` making sure it doesn't make its way into the git repository.
+4. It's a good practice to quickly see if dapr picks up your new components. Running the dapr run file gives us this:
+   ```text
+   INFO[0000] Component loaded: secretstore (secretstores.local.file/v1)  app_id=users-app
+   ```
+   If you get any errors, it's worth paying close attention to paths, folders, and their relative position.
+5. Let's get rid of the connection string in the "Configuration" component file. Update the component to reference the 
+   `ConnectionStrings:Postgresql` secret value.
+   ```yaml
+   # omitted other values
+     metadata:
+       - name: connectionString
+         secretKeyRef:
+           name: "ConnectionStrings:Postgresql"
+           key: "ConnectionStrings:Postgresql"
+   auth:
+     secretStore: secretstore
+   ```
+   There are two important changes here, compared to the original yaml: observe the connectionstring now references a secret with 
+   `secretKeyRef` having both `name` and `key` set with identical values. Secondly, I've added an `auth` element which is set to the 
+   exact same name as our secrets component's name.
 
-```yaml
-apiVersion: dapr.io/v1alpha1
-kind: Component
-metadata:
-  name: secretstore
-  namespace: default
-spec:
-  type: secretstores.local.file
-  version: v1
-  metadata:
-    - name: secretsFile
-      # Relative to the project, and not solution root
-      value: .dapr/secrets/appsettings.Secrets.json
-      # Allows nested json
-    - name: nestedSeparator 
-      value: ":"
-```
+### Preparing the application
+1. First off, to be a good citizen, let's tell our colleagues that they now need to use .dapr secrets by making it explicit within the
+   appsettings.json.
+   ```json
+   // appsettings.json in the Users application.
+   {
+     // other settings
+     "ConnectionStrings": {
+       "Postgresql": "use .dapr/secrets/appsettings.Secrets.json"
+     }
+   }
+   ```
+   There's almost nothing more annoying than chasing down settings loaded from various sources. Establishing clear and direct configurations
+   promotes scalability and enhances collaborative efforts.
+2. Configure the application to have secrets loaded in at start-up.
+   ```c#
+   // In 'Users' Program.cs
+   builder.Configuration.AddDaprSecretStore(
+       "secretstore",
+       daprClient,
+       TimeSpan.FromSeconds(10)
+   );
+   string? connectionString = builder.Configuration
+                                     .GetConnectionString("Postgresql");
+   ```
+   The `daprClient` is the same we instantiated during the "Configuration building block" steps. Also, take note of the `secretstore` 
+   name, passed as first parameter. This name must match the `metadata.name` from the secrets component.
 
-Since secrets are typically application-specific, you'd want to place this file within the project that needs the secrets, as opposed to
-having this component as a shared resource between all daprized applications.
+   The `TimeSpan.FromSeconds(10)` means we're willing to wait 10 seconds for the sidecar to respond with the values.
 
-In the project itself, create a file that hold secret values here `.dapr/secrets/appsettings.Secrets.json`, containing whatever values
-your application might need, such as a connection string or private key.
+We've now demonstrated how to implement and use the "Secrets management" dapr building block and component, both in terms of accessing 
+secret values within the application at runtime, and as Reference secrets in other dapr components.
 
+## Pub-Sub building block
+The Publish-Subscriber pattern is prevalent in many distributed architectures and solution designs, and dapr makes it easier than ever 
+to implement message-based communication. 
+
+### Preparing the pub-sub component
+To start off with, we need to prepare the pub-sub component. We've already set ourselves up RabbitMQ earlier, in the `docker-compose` 
+file. Now it's just a matter of defining our component configurations.
+
+1. Create a pub-sub component in the solution `.dapr/components` folder called `pubsub.yml`.
+   ```yaml
+   # pubsub.yml
+   apiVersion: dapr.io/v1alpha1
+   kind: Component
+   metadata:
+      name: pubsub
+   spec:
+      type: pubsub.rabbitmq
+      version: v1
+      metadata:
+         - name: connectionString
+           value: "amqp://localhost:5672"
+         - name: protocol
+           value: amqp
+         - name: hostname
+           value: localhost
+         - name: password
+           value: guest
+         - name: username
+           value: guest
+   ```
+   > To keep things focused on pub-sub here in this exercise, I've decided not to load sensitive values from the secrets component. 
+2. Try to rerun your dapr run file. You should see the sidecar picks up the new component. Then go to the rabbitmq management interface, 
+   and verify that the sidecar has an active connection.
+   ![rabbitmq](rabbitmq.png)
+   
+The pub-sub component is quite simple to integrate with and doesn't require much else.
+
+### Preparing the app for pub/sub
+How you deal with events at the application level is somewhat different than what I've usually been used to.
+
+The usual experience goes something like this: create a connection, then grab a channel, declare an exchange and a queue and bind those 
+two. After that, you need to create a consumer that listens to events that are routed to the queue.
+
+All this is gone. With dapr, events are routed to a regular web API endpoint.
+
+1. Our next step is to prepare the `Users` app, enabling the sidecar to send events to the app.
+2. Add a few configuration lines to the `Program.cs` file.
+   ```c#
+   // After app.MapControllers();
+   app.UseCloudEvents();
+   app.MapSubscribeHandler();
+   ```
+3. Then create an endpoint with a `[Topic]` attribute.
+   ```c#
+   [Topic("pubsub", "newevent")]
+   [HttpPost("newevent")]
+   public IActionResult Event(CloudEvent @event)
+   {
+       logger.LogInformation("Event received!");
+       
+       return Ok();
+   }
+   ```
+   Pay attention to the following:
+   - The method argument `CloudEvent`. Dapr allows us to use the [CNCF event description](https://cloudevents. io/) out-of-the-box.
+   - The topic's first argument is the pubsub.yml `metadata.name` and the second is an arbitrary name of the message broker exchange 
+     that you want to pick up messages from.
+   - The `[HttpPost("newevent")]` attribute, where `newevent` becomes the name of the rabbitmq exchange. There's also a rabbitmq queue 
+     created named `users-app-newevent`. 
+4. Run the `Users` app while the sidecar is running and go to the rabbitmq management interface.
+
+As you can see, listening for events with dapr suddenly becomes trival, and there's no need for a lot of ceremony and boilerplate code.
+
+Since we're expected cloud-event messages, the messages need to conform to a specific format:
 ```json
-// appsettings.Secrets.json 
-// placed in the project .dapr/secrets folder
+// Example message you can post on the queue
 {
-  "ConnectionStrings": {
-    "Postgresql": "My secret connectionstring to postgresql"
-  }
+   "specversion" : "1.0",
+   "type" : "my-event-type",
+   "source" : "/mycontext",
+   "id" : "B234-1234-1234",
+   "time" : "2018-04-05T17:31:00Z",
+   "datacontenttype" : "application/json",
+   "data" : {
+      "exampleKey" : "exampleValue"
+   }
 }
 ```
 
-
-
-## Pub/Sub building block
-
 <seealso>
 <category ref="external">
-<a href="https://github.com/dapr/components-contrib/blob/master/configuration/azure/appconfig/appconfig.go">Configuration definition</a>
+<a href="https://github.com/dapr/components-contrib/blob/master/configuration/azure/appconfig/appconfig.go">Configuration definition 
+(GitHub)</a>
+<a href="https://docs.dapr.io/operations/components/component-secrets/">Dapr Reference secrets</a>
+<a href="https://cloudevents.io/">Cloud Events</a>
 </category>
 </seealso>

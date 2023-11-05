@@ -16,7 +16,6 @@
     <toc-element topic="Developer-experience.md">
         <toc-element topic="Getting-started.md"/>
         <toc-element topic="Building-applications.md"/>
-        <toc-element topic="Defining-components.md"/>
     </toc-element>
     <toc-element topic="Application-deployment.md">
         <toc-element topic="Azure-containerapp.md"/>

@@ -1,3 +1,1 @@
-# Azure containerapp
-
-Start typing here...
+# Creating an Azure containerapp
