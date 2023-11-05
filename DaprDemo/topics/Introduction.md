@@ -1,5 +1,8 @@
 # Introduction 
 
+These notes are created by [Nicklas Millard](https://www.linkedin.com/in/nicklasmillard/) as part of a [Code Club Copenhagen - 3C meetup 
+presentation](https://www.meetup.com/code-club-copenhagen/).
+
 I've gathered most of my learning and hard-earned lessons from working with dapr in this documentation site.
 
 Since dapr is quite new, tools and services are still being developed and a lot of common scenarios aren't well-documented
@@ -11,6 +14,7 @@ yet. So, this is an attempt at gathering my learnings in one place.
 ## "Should I read the intro?"
 This first chapter is solely to get you acquainted with dapr and its key concepts. It may be worth reading through even if you're 
 already somewhat familiar with dapr. 
+
 
 <seealso style="links">
     <category ref="external">
