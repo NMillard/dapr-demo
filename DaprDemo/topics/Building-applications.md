@@ -337,7 +337,7 @@ because services no longer need to know the address over other services. The sid
 
 gRPC services are defined using proto descriptions. Here's the `accounts` app's proto file:
 
-```proto
+```text
 syntax = "proto3";
 
 option csharp_namespace = "Accounts";
@@ -720,7 +720,7 @@ file. Now it's just a matter of defining our component configurations.
    > To keep things focused on pub-sub here in this exercise, I've decided not to load sensitive values from the secrets component. 
 2. Try to rerun your dapr run file. You should see the sidecar picks up the new component. Then go to the rabbitmq management interface, 
    and verify that the sidecar has an active connection.
-   ![rabbitmq](rabbitmq.png)
+   <img src="rabbitmq.png" alt="rabbitmq" height="300"/>
    
 The pub-sub component is quite simple to integrate with and doesn't require much else.
 
