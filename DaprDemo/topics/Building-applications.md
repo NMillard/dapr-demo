@@ -1,6 +1,6 @@
 # Building applications
 
-To really appreciate the simplicity that dapr provides, let's build two applications that use common components that you'd
+To really appreciate the simplicity that Dapr provides, let's build two applications that use common components that you'd
 expect from any mildly complex distributed solution.
 
 You may write along if you wish, but I've designed this section to be more of an inspiration to how you can enable certain building blocks
@@ -15,21 +15,21 @@ functionalities?", and then I'll create a component configuration that goes alon
 ## Key terminology
 
 As with anything new, grasping key terminologies often makes the learning curve smoother and enhances understanding. At this point,
-you're likely familiar with most of the dapr terms, however, take a minute to review the terms below and their meaning.
+you're likely familiar with most of the Dapr terms, however, take a minute to review the terms below and their meaning.
 
-- **dot dapr (.dapr) folder**: a folder which holds dapr specific configurations, and is conventionally also named `.dapr`. Individual
+- **dot dapr (.dapr) folder**: a folder which holds Dapr specific configurations, and is conventionally also named `.dapr`. Individual
   developers may change its physical name, but should still be referred to as the "dot dapr folder."
 - **Component**: a building block implementation, such as the "secrets manager component."
 - **Project component**: a component that is specifically only used in a single application.
-- **Resource**: a broad catagorization of dapr constructs, such as "multi app run file," "component," and "dapr API."
-- **Shared resource**: typically refers to a shared dapr component.
-- **Sidecar**: short for an application-specific "dapr sidecar."
+- **Resource**: a broad catagorization of Dapr constructs, such as "multi app run file," "component," and "Dapr API."
+- **Shared resource**: typically refers to a shared Dapr component.
+- **Sidecar**: short for an application-specific "Dapr sidecar."
 
 ## The applications
 
 We'll create two simple, arbitrary applications that communicate with each other through HTTP, gRPC, and event messages.
 
-The applications are not meant to model any domain, or, really make any sense. They're made purely to demonstrate dapr capabilities that are
+The applications are not meant to model any domain, or, really make any sense. They're made purely to demonstrate Dapr capabilities that are
 prevalent in many distributed architectures and solution designs:
 
 - Service-to-service invocation (HTTP and gRPC): how
@@ -156,28 +156,51 @@ apps:
 ### Installing package dependencies
 
 <procedure>
-<p>Since dapr is mostly doing all the work in the sidecar, "daprizing" applications is as simple as adding a few dependencies, and very 
+<p>Since Dapr is mostly doing all the work in the sidecar, "daprizing" applications is as simple as adding a few dependencies, and very 
 little additional code.</p>
 <step>
-<p>To take full advantage of the dapr building blocks, we'll need to install a few dependencies:</p>
-<code-block lang="xml">
+<p>To take full advantage of the Dapr building blocks, we'll need to install a few dependencies in each .csproj</p>
+<code-block lang="xml" >
 &lt;PackageReference Include=&quot;Dapr.AspNetCore&quot; Version=&quot;1.12.0&quot; /&gt;
 &lt;PackageReference Include=&quot;Dapr.Extensions.Configuration&quot; Version=&quot;1.12.0&quot; /&gt;
 </code-block>
 </step>
 <step>
-<p>Then add dapr client to the dependency injection container.</p>
+<p>Then add Dapr client to the dependency injection container.</p>
 <code-block lang="c#">
+// In each Program.cs
 builder.Services.AddDaprClient();
 </code-block>
 </step>
+
+<step>
+<p>Each project also needs to know how to communicate with its sidecar. This is done using the environment variables: <code>DAPR_HTTP_PORT</code> 
+and <code>DAPR_GRPC_PORT</code>. Add the following to the <code>launchSettings.json</code>:</p>
+<code-block lang="json">
+// Users launchSettings.json
+"environmentVariables": {
+  "ASPNETCORE_ENVIRONMENT": "Development",
+  "DAPR_HTTP_PORT": "3501",
+  "DAPR_GRPC_PORT": "60001"
+}
+
+// Accounts launchSettings.json
+"environmentVariables": {
+   "ASPNETCORE_ENVIRONMENT": "Development",
+   "DAPR_HTTP_PORT": "3500",
+   "DAPR_GRPC_PORT": "60000"
+}
+</code-block>
+<p>Notice the ports are the same as mapped in the Dapr multi app run file.</p>
+</step>
 </procedure>
+
 
 This is all the setup we need for now. We'll add additional setup as we onboard new components.
 
 ### Run the sidecars
-As you develop your application, you can have the dapr sidecars running. The only time you need to restart the sidecars is when you're 
-making dapr-specific changes such as component updates.
+As you develop your application, you can have the Dapr sidecars running. The only time you need to restart the sidecars is when you're 
+making Dapr-specific changes such as component updates.
 
 Run `dapr run -f .dapr/dapr.yml`
 
@@ -206,7 +229,7 @@ public record MeResponse(Guid Id, string Username);
 ### HTTP call
 You can start the application locally as you'd always do, and hit this endpoint with:
 - an http request
-- using dapr resources such as the dapr cli
+- using Dapr resources such as the Dapr cli
 - and requests directly to the sidecar.
 
 <tabs>
@@ -214,16 +237,16 @@ You can start the application locally as you'd always do, and hit this endpoint 
 <code-block lang="http">
 curl http://localhost:5214/users/me
 </code-block>
-<p>A simple curl request works as expected. Nothing has changed, even though we're also using dapr.</p>
+<p>A simple curl request works as expected. Nothing has changed, even though we're also using Dapr.</p>
 </tab>
 
 <tab title="Dapr CLI">
 <code-block lang="shell">
 dapr invoke --app-id users-app -m /users/me -v GET --log-as-json
 </code-block>
-<p>You can use the dapr cli when testing locally. Using <code>--log-as-json</code> is great for debugging potential dapr configuration 
+<p>You can use the Dapr cli when testing locally. Using <code>--log-as-json</code> is great for debugging potential Dapr configuration 
 errors.</p>
-<p>Also, dapr defaults to <code>POST</code> requests. You have to explicitly tell the cli to use <code>GET</code>.</p>
+<p>Also, Dapr defaults to <code>POST</code> requests. You have to explicitly tell the cli to use <code>GET</code>.</p>
 </tab>
 
 <tab title="Dapr Sidecar">
@@ -241,7 +264,7 @@ curl -H 'dapr-app-id: users-app' http://localhost:3501/users/me
 </code-block>
 
 <p>Notice we're making a regular HTTP request, but this time directed at the user application's sidecar, running on port <code>3501</code>.</p>
-<p>Using the http header <code>dapr-app-id</code> may produce a nice-looking url, but this approach also requires you to add dapr 
+<p>Using the http header <code>dapr-app-id</code> may produce a nice-looking url, but this approach also requires you to add Dapr 
 specific headers in your code.</p>
 </tab>
 </tabs>
@@ -258,7 +281,7 @@ Just like before, we have several ways of achieving the same, when calling anoth
 1. Use `DaprClient`'s `InvokeMethodAsync` method. This is very restrictive, and I think this should generally be avoided.
 2. Create an `Invoke method request` using the same `DaprClient`. This is preferred over using `InvokeMethodAsync` because we have more 
    flexibility, and it allows us to add additional headers.
-3. The "dapr native" way by creating an "Invoker http client" which dapr configures for us. This approach allows nice-looking URLs and 
+3. The "Dapr native" way by creating an "Invoker http client" which Dapr configures for us. This approach allows nice-looking URLs and 
    provides us with flexibility because we're essentially dealing with an almost regular `HttpClient`.
 4. Use a language native `HttpClient`. This is my preferred option since we've no reliance on external code. We simply make a regular 
    HTTP call to the sidecar.
@@ -364,7 +387,7 @@ message GoodbyeReply {
 }
 ```
 
-This allows us to invoke the services `SayHello` and `SayGoodbye` with the sidecar. However, the dapr cli doesn't seem to support gRPC 
+This allows us to invoke the services `SayHello` and `SayGoodbye` with the sidecar. However, the Dapr cli doesn't seem to support gRPC 
 invocation at this point.
 
 #### gRPC code implementation
@@ -423,12 +446,12 @@ Alright, now you've seen how the service-to-service building block works.
 
 ## Configuration management building block
 
-Applications often need flexible configurations that can change without having to modify code, restart, or redeploy. That's where the dapr 
+Applications often need flexible configurations that can change without having to modify code, restart, or redeploy. That's where the Dapr 
 configuration component comes in handy.
 
 ### Preparing the app for configurations
 Say we want to let the `users` app dynamically change the `username` output from the `/users/me` endpoint.
-We'll first make a few changes to the `users` app. Notice that none of these changes are dapr specific yet.
+We'll first make a few changes to the `users` app. Notice that none of these changes are Dapr specific yet.
 
 1. Add the new configurations to the `appsettings.json`.
     ```json
@@ -467,7 +490,7 @@ We'll first make a few changes to the `users` app. Notice that none of these cha
     }
     ```
 
-The none-dapr specifics are now done. Let's shift our focus on creating a component configuration and setting things up to work with the 
+The none-Dapr specifics are now done. Let's shift our focus on creating a component configuration and setting things up to work with the 
 Configurations building block.
 
 ### Setting up the configuration component
@@ -492,9 +515,9 @@ application, and create a database table and trigger.
         - name: subscribePollInterval
           value: 60000000000 # = 1 second
     ```
-   This tells dapr that it can find configurations using a postgres database, with the specified connectionstring and pulling
+   This tells Dapr that it can find configurations using a postgres database, with the specified connectionstring and pulling
    configurations from the table called `configurations`.
-   Be aware that dapr only supports all-lowercase configuration table names.
+   Be aware that Dapr only supports all-lowercase configuration table names.
 3. Then we need to set up the database to contain our "configurations" table and trigger to notify when changes occur. You'd want to 
    keep this script in source control and apply as part of a migration.
     ```sql
@@ -532,9 +555,9 @@ application, and create a database table and trigger.
         AFTER INSERT OR UPDATE OR DELETE ON "configurations"
         FOR EACH ROW EXECUTE PROCEDURE notify_event();
     ```
-    You might want to run the dapr run file to check if your sidecars are configured correctly, and loads the new "Configuration"
+    You might want to run the Dapr run file to check if your sidecars are configured correctly, and loads the new "Configuration"
     component. The sidecar shows an error in case of malconfigurations.
-4. Switching back to our application, you'll need to tell it how to fetch configuration values from dapr. At the moment, there seems to 
+4. Switching back to our application, you'll need to tell it how to fetch configuration values from Dapr. At the moment, there seems to 
    be a few development issues that require us to both use the `AddDaprConfigurationStore()` _and_ `AddStreamingDaprConfigurationStore()`.
    I've explained why in the code.
 ```c#
@@ -562,7 +585,7 @@ builder.Services.Configure<UserConfiguration>(config.GetSection("UserConfigurati
 ```
 
 ### Change value
-At this point, we'll need to rerun dapr to load the new component.
+At this point, we'll need to rerun Dapr to load the new component.
 
 1. After that, try call `dapr invoke --app-id users-app -m /users/me -v GET`
 2. Then insert a row in the "configurations" table:
@@ -582,7 +605,7 @@ Managing secrets is challenging. How you manage secrets locally, in test environ
 greatly, making things even more difficult.
 
 For this, you can use the Secrets Management building block for both:
-- Reading secrets into other dapr components,
+- Reading secrets into other Dapr components,
 - and loading secret values into your application.
 
 ### Local secrets file
@@ -633,7 +656,7 @@ Storing secrets in files locally is generally fine for development purposes, but
    }
    ```
 3. git-ignore the `appsettings.Secrets.json` making sure it doesn't make its way into the git repository.
-4. It's a good practice to quickly see if dapr picks up your new components. Running the dapr run file gives us this:
+4. It's a good practice to quickly see if Dapr picks up your new components. Running the Dapr run file gives us this:
    ```text
    INFO[0000] Component loaded: secretstore (secretstores.local.file/v1)  app_id=users-app
    ```
@@ -679,16 +702,16 @@ Storing secrets in files locally is generally fine for development purposes, but
    string? connectionString = builder.Configuration
                                      .GetConnectionString("Postgresql");
    ```
-   The `daprClient` is the same we instantiated during the "Configuration building block" steps. Also, take note of the `secretstore` 
+   The `DaprClient` is the same we instantiated during the "Configuration building block" steps. Also, take note of the `secretstore` 
    name, passed as first parameter. This name must match the `metadata.name` from the secrets component.
 
    The `TimeSpan.FromSeconds(10)` means we're willing to wait 10 seconds for the sidecar to respond with the values.
 
-We've now demonstrated how to implement and use the "Secrets management" dapr building block and component, both in terms of accessing 
-secret values within the application at runtime, and as Reference secrets in other dapr components.
+We've now demonstrated how to implement and use the "Secrets management" Dapr building block and component, both in terms of accessing 
+secret values within the application at runtime, and as Reference secrets in other Dapr components.
 
 ## Pub-Sub building block
-The Publish-Subscriber pattern is prevalent in many distributed architectures and solution designs, and dapr makes it easier than ever 
+The Publish-Subscriber pattern is prevalent in many distributed architectures and solution designs, and Dapr makes it easier than ever 
 to implement message-based communication. 
 
 ### Preparing the pub-sub component
@@ -718,7 +741,7 @@ file. Now it's just a matter of defining our component configurations.
            value: guest
    ```
    > To keep things focused on pub-sub here in this exercise, I've decided not to load sensitive values from the secrets component. 
-2. Try to rerun your dapr run file. You should see the sidecar picks up the new component. Then go to the rabbitmq management interface, 
+2. Try to rerun your Dapr run file. You should see the sidecar picks up the new component. Then go to the rabbitmq management interface, 
    and verify that the sidecar has an active connection.
    <img src="rabbitmq.png" alt="rabbitmq" height="300"/>
    
@@ -730,7 +753,7 @@ How you deal with events at the application level is somewhat different than wha
 The usual experience goes something like this: create a connection, then grab a channel, declare an exchange and a queue and bind those 
 two. After that, you need to create a consumer that listens to events that are routed to the queue.
 
-All this is gone. With dapr, events are routed to a regular web API endpoint.
+All this is gone. With Dapr, events are routed to a regular web API endpoint.
 
 1. Our next step is to prepare the `Users` app, enabling the sidecar to send events to the app.
 2. Add a few configuration lines to the `Program.cs` file.
@@ -758,7 +781,7 @@ All this is gone. With dapr, events are routed to a regular web API endpoint.
      created named `users-app-newevent`. 
 4. Run the `Users` app while the sidecar is running and go to the rabbitmq management interface.
 
-As you can see, listening for events with dapr suddenly becomes trival, and there's no need for a lot of ceremony and boilerplate code.
+As you can see, listening for events with Dapr suddenly becomes trival, and there's no need for a lot of ceremony and boilerplate code.
 
 Since we're expected cloud-event messages, the messages need to conform to a specific format:
 ```json

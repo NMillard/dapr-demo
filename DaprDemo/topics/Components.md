@@ -5,11 +5,12 @@ A component is an implementation detail of a building block.
 That means, if you want to connect to a secret store and load sensitive configurations and data into your application, then you need a 
 secrets management component.
 
-> Components are also referred to as "Component Resources" or simply "Resources".
+> Components are also sometimes referred to as "Component Resources" or simply "Resources". But note that a Dapr Resource is a broad 
+> categorization.
 {style=note}
 
 ## Component location
-To use components, you'll need to tell the dapr sidecar that it should load a component resource from a component configuration file.
+To use components, you'll need to tell the Dapr sidecar that it should load a component resource from a component configuration file.
 
 Configuration files are written in yaml, and typically placed within a `.dapr` folder in your solution. Each project within the solution 
 may also have its own `.dapr` folder. This is convenient when working with secrets locally.
@@ -19,7 +20,7 @@ root
 ├── MySolution.sln
 ├── src
 │   └── MyWebApi.csproj
-│   └──.dapr
+│   └──.Dapr
 │      └── secrets
 │          └ appsettings.Secrets.json
 └──.dapr

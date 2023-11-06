@@ -1,18 +1,18 @@
 # Application deployment
 
-Deploying applications to production can be a daunting task, made simpler and more manageable through the use of tools like Dapr. By
-abstracting away many of the problems associated with distributed systems, Dapr allows developers to focus more on writing business logic
-rather than infrastructure code. However, as with any tool, there are potential "gotchas" to be aware of and some limitations.
+Deploying applications to production can be a frustrating, and at times even confusion task, when comparing what you have locally with 
+what you need in the cloud.
+
+However, as with any tool, there are potential "gotchas" to be aware of and some limitations.
 
 ### Ease of Deployment:
 
 - Platform Agnostic: One of the biggest advantages of Dapr is its platform-agnostic approach. It can run on any hardware, OS, or cloud
   provider, which makes deploying your applications straightforward regardless of your existing tech stack.
-- Consistency: The consistency across environments that Dapr provides helps to streamline the deployment process. Whether you’re developing
-  on your local machine or deploying applications in production, you'll use the same runtime APIs in Dapr.
-- Non-Intrusive: Dapr is non-intrusive. It runs as a side-car service alongside your application and communicates via HTTP or gRPC. This
-  means you don’t need to change your code to take advantage of Dapr. It allows for incremental adoption without a complete disruption of
-  the development/deployment cycle.
+- Consistency: Dapr provides a great deal of consistency when across environments, but you still do need to be aware of some 
+  cloud-vendor specifics.
+- Kubernetes ready: Component configurations are already written in a kubernetes-ready format. As long as you're using a k8 supported 
+  component, you can apply it directly to the cluster using `kubectl`.
 
 ### "Gotchas" and Shortcomings:
 
@@ -20,14 +20,15 @@ rather than infrastructure code. However, as with any tool, there are potential 
   take time, and educating the team about it might slow down the initial deployment process.
 - Debugging Complexity: Debugging applications using Dapr can be complicated because issues may lie either in your application code or
   within Dapr’s runtime environment. If problems emerge, it might require more effort to identify and solve them.
-- Maturity: Although Dapr has shown much promise, it’s still relatively new compared to other similar tools. Therefore, it may lack certain
-  advanced features or integrations that are readily available in other more established platforms.
+- Maturity: Although Dapr has shown much promise, it’s still during the early development phase. Not everything is documented and you 
+  sometimes have to dig deep to investigate a certain issue.
 - Dependencies: Although Dapr simplifies the process of running microservices, it adds another layer of dependency. It means any extra
   complexity, bugs, or vulnerabilities associated with Dapr become your problem too.
 - Operational Complexity: Operating a Dapr cluster in a production environment may involve additional operational complexity. Configuration,
-  security, upgrades, and monitoring need to be taken care of, which can introduce potential points of failure or complication. Overall,
-  while Dapr greatly simplifies the deployment process and mitigates common headaches in distributed systems, it's beneficial to be aware of
-  potential challenges that may arise in the deployment phase, to plan and account for these possibilities.
+  security, upgrades, and monitoring need to be taken care of, which can introduce potential points of failure or complication.
+
+Overall, while Dapr greatly simplifies the deployment process and mitigates common headaches in distributed systems, it's beneficial to be
+aware of potential challenges that may arise in the deployment phase, to plan and account for these possibilities.
 
 ## Deploying daprized apps
 
